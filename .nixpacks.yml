@@ -4,7 +4,6 @@ phases:
   setup:
     nixPkgs:
       - php82
-      - php82Extensions.apache
       - php82Extensions.composer
       - php82Extensions.curl
       - php82Extensions.gd
@@ -13,38 +12,12 @@ phases:
       - php82Extensions.xml
       - php82Extensions.zip
       - php82Extensions.pdo_mysql
-      - apacheHttpd
   install:
-    - composer install --no-dev --optimize-autoloader
+    - composer install --no-dev --optimize-autoloader --no-scripts
   build:
     - php artisan optimize
     - php artisan storage:link
     - chmod -R 755 storage
     - chmod -R 755 bootstrap/cache
 
-# Create a custom start script
-start: |
-  # Set the port Apache should listen on
-  echo "Listen ${PORT:-8080}" > /etc/apache2/ports.conf
-  
-  # Create Apache virtual host configuration
-  echo "<VirtualHost *:${PORT:-8080}>
-      ServerAdmin webmaster@localhost
-      DocumentRoot /var/www/html/public
-      
-      <Directory /var/www/html/public>
-          Options Indexes FollowSymLinks
-          AllowOverride All
-          Require all granted
-      </Directory>
-      
-      ErrorLog /dev/stderr
-      CustomLog /dev/stdout combined
-  </VirtualHost>" > /etc/apache2/sites-available/000-default.conf
-
-  # Enable rewrite module
-  a2enmod rewrite
-  a2ensite 000-default
-  
-  # Start Apache
-  exec apache2ctl -D FOREGROUND
+start: bash start.sh
