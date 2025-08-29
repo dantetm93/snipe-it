@@ -1,0 +1,19 @@
+version: 1
+
+phases:
+  setup:
+    nixPkgs:
+      - php82
+      - php82Extensions.composer
+      - php82Extensions.curl
+      - php82Extensions.gd
+      - php82Extensions.mbstring
+      - php82Extensions.openssl
+      - php82Extensions.xml
+      - php82Extensions.zip
+      - php82Extensions.pdo_mysql
+  install:
+    - composer install --no-dev --optimize-autoloader
+  build:
+    - php artisan optimize
+    - php artisan migrate --force
