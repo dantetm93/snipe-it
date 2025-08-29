@@ -4,6 +4,7 @@ phases:
   setup:
     nixPkgs:
       - php82
+      - php82Extensions.apache
       - php82Extensions.composer
       - php82Extensions.curl
       - php82Extensions.gd
@@ -12,8 +13,30 @@ phases:
       - php82Extensions.xml
       - php82Extensions.zip
       - php82Extensions.pdo_mysql
+      - apacheHttpd
   install:
     - composer install --no-dev --optimize-autoloader
   build:
     - php artisan optimize
-    - php artisan migrate --force
+    - php artisan storage:link
+    - chmod -R 755 storage
+    - chmod -R 755 bootstrap/cache
+
+# Create a custom start script
+startCommand: |
+  # Set up Apache configuration for Railway
+  echo "Listen ${PORT:-80}" > /etc/apache2/ports.conf
+  echo "<VirtualHost *:${PORT:-80}>
+      DocumentRoot /var/www/html/public
+      <Directory /var/www/html/public>
+          AllowOverride All
+          Require all granted
+      </Directory>
+  </VirtualHost>" > /etc/apache2/sites-available/000-default.conf
+
+  # Enable necessary Apache modules
+  a2enmod rewrite
+  a2ensite 000-default
+
+  # Start Apache in the foreground
+  apache2ctl -D FOREGROUND
